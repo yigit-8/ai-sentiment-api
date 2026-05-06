@@ -22,7 +22,7 @@ if st.button("Analyze Sentiment", use_container_width=True):
     if user_input.strip() == "":
         st.warning("Please enter some text.")
     else:
-        with st.spinner("AI is processing..."):
+        with st.spinner("Analyzing..."):
             try:
                 response = requests.post(f"{API_BASE_URL}/analyze", json={"text": user_input})
                 if response.status_code == 200:

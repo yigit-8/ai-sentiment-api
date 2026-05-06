@@ -47,7 +47,7 @@ def log_to_db(text: str, label: str, score: float):
 
 @app.get("/")
 def read_root():
-    return {"message": "AI API is running! Go to /docs to test it."}
+    return {"message": "Sentiment API is running! Go to /docs to test it."}
 
 @app.post("/analyze")
 def analyze_sentiment(request: TextRequest):

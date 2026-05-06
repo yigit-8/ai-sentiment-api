@@ -10,7 +10,7 @@ app_port: 7860
 
 # 🚀 AI Sentiment Analysis App
 
-A containerized, production-ready full-stack AI application that performs real-time sentiment analysis using NLP. Built with a **FastAPI** backend, **Streamlit** frontend, and a live **MLOps monitoring dashboard**.
+A containerized full-stack application that performs real-time sentiment analysis using NLP. Built with a **FastAPI** backend, **Streamlit** frontend, and a live **monitoring dashboard**.
 
 **🔴 Live Demo:** [yliman-ai-sentiment-api.hf.space](https://yliman-ai-sentiment-api.hf.space)
 

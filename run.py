@@ -18,39 +18,34 @@ def wait_for_port(port, host='127.0.0.1', timeout=300, process=None):
             if time.time() - start_time > timeout:
                 return False
 
-# 1. Start the Backend (FastAPI) in the background
-print("🚀 Starting AI Backend (FastAPI) on internal port 8000...")
+print("Starting backend on port 8000...")
 backend = subprocess.Popen(["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"])
 
-# 2. Wait for the API to be ready
-print("⏳ Waiting for backend to be ready...")
+print("Waiting for backend to be ready...")
 if not wait_for_port(8000, process=backend):
-    print("❌ Error: Backend failed to start or timed out.")
+    print("Error: Backend failed to start or timed out.")
     backend.terminate()
     exit(1)
 
-# 3. Start the Frontend (Streamlit) in the background
-print("🎨 Starting Web Frontend (Streamlit) on public port 7860...")
+print("Starting frontend on port 7860...")
 frontend = subprocess.Popen([
-    "streamlit", "run", "frontend.py", 
-    "--server.port", "7860", 
+    "streamlit", "run", "frontend.py",
+    "--server.port", "7860",
     "--server.address", "0.0.0.0"
 ])
 
-# 4. Monitor both processes to keep the container alive
 try:
     while True:
         if backend.poll() is not None:
-            print("\n⚠️ Backend service stopped unexpectedly.")
+            print("Backend stopped unexpectedly.")
             break
         if frontend.poll() is not None:
-            print("\n⚠️ Frontend service stopped unexpectedly.")
+            print("Frontend stopped unexpectedly.")
             break
         time.sleep(5)
 except KeyboardInterrupt:
-    print("\n🛑 Shutting down services...")
+    print("Shutting down...")
 finally:
-    # Clean up processes on exit
     backend.terminate()
     frontend.terminate()
     sys.exit(0)
