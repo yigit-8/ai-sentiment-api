@@ -1,0 +1,30 @@
+name: Sync to Hugging Face
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Node.js 24 uyumluluğu için
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Kimlik bilgilerini maskeli (no-reply) olarak tanımlıyoruz
+          git config --global user.email "yliman@users.noreply.github.com"
+          git config --global user.name "yliman"
+          
+          # Hugging Face senkronizasyonu
+          git push --force https://yliman:$HF_TOKEN@huggingface.co/spaces/yliman/ai-sentiment-api main

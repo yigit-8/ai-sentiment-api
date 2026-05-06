@@ -1,0 +1,17 @@
+name: AI API CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Test Docker Build
+      run: docker build -t test-sentiment-api .
