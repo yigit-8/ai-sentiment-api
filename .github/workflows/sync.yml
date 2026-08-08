@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Node.js 24 uyumluluğu için
+# Required for Node.js 24 compatibility
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -22,9 +22,13 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Kimlik bilgilerini maskeli (no-reply) olarak tanımlıyoruz
+          if [ -z "$HF_TOKEN" ]; then
+            echo "HF_TOKEN secret is not set - skipping Hugging Face sync." >&2
+            exit 0
+          fi
+
+          # Commit identity uses the GitHub no-reply address
           git config --global user.email "yliman@users.noreply.github.com"
           git config --global user.name "yliman"
-          
-          # Hugging Face senkronizasyonu
-          git push --force https://yliman:$HF_TOKEN@huggingface.co/spaces/yliman/ai-sentiment-api main
+
+          git push --force "https://yliman:$HF_TOKEN@huggingface.co/spaces/yliman/ai-sentiment-api" main

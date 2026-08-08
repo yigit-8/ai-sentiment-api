@@ -6,7 +6,11 @@ import os
 
 app = FastAPI()
 
-sentiment_model = pipeline("sentiment-analysis")
+# Pinned explicitly: without a model name the pipeline falls back to whatever
+# Hugging Face currently ships as the default, which can change under us.
+MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english"
+
+sentiment_model = pipeline("sentiment-analysis", model=MODEL_NAME)
 
 class TextRequest(BaseModel):
     text: str
