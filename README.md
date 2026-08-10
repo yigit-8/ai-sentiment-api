@@ -10,7 +10,7 @@ app_port: 7860
 
 # 🚀 AI Sentiment Analysis App
 
-![CI](https://github.com/yigit-8/ai-sentiment-api/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/yigitliman/ai-sentiment-api/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 A containerized full-stack application that performs real-time sentiment analysis using NLP. Built with a **FastAPI** backend, **Streamlit** frontend, and a live **monitoring dashboard**.
