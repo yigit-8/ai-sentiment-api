@@ -50,12 +50,12 @@ Single-request latency on CPU, with no GPU and no batching: **p50 37 ms, p95 64 
 
 ## Features
 
-- **Real-time sentiment analysis** — classifies text as POSITIVE or NEGATIVE with a confidence score
+- **Real-time sentiment analysis**: classifies text as POSITIVE or NEGATIVE with a confidence score
 - **REST API** with auto-generated Swagger docs (`/docs`)
-- **MLOps dashboard** — live pie chart and recent prediction history via analytics endpoints
-- **Persistent logging** — every prediction is stored in SQLite
-- **Fully containerized** — single Docker image runs both backend and frontend
-- **Test suite** — endpoint, model, and database tests with Pytest
+- **MLOps dashboard**: live pie chart and recent prediction history via analytics endpoints
+- **Persistent logging**: every prediction is stored in SQLite
+- **Fully containerized**: single Docker image runs both backend and frontend
+- **Test suite**: endpoint, model, and database tests with Pytest
 
 ---
 
