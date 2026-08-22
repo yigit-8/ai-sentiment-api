@@ -8,14 +8,18 @@ pinned: false
 app_port: 7860
 ---
 
-# 🚀 AI Sentiment Analysis App
+# Sentiment Analysis Demo (FastAPI + Streamlit)
 
 ![CI](https://github.com/yigitliman/ai-sentiment-api/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-A containerized full-stack application that performs real-time sentiment analysis using NLP. Built with a **FastAPI** backend, **Streamlit** frontend, and a live **monitoring dashboard**.
+A DistilBERT sentiment classifier served over a FastAPI REST API, with a Streamlit front end and a SQLite prediction log, packaged as one Docker image and deployed on Hugging Face Spaces.
+
+This repo is the deployed demo. The MLflow tracking, Evidently drift detection and fuller CI for the same model live in [mlops-sentiment-pipeline](https://github.com/yigitliman/mlops-sentiment-pipeline).
 
 **🔴 Live Demo:** [yliman-ai-sentiment-api.hf.space](https://yliman-ai-sentiment-api.hf.space)
+
+> **Note:** text submitted to the live demo is stored in the app's SQLite database and returned by the public, unauthenticated `/logs` endpoint. Do not enter personal, confidential, or sensitive information.
 
 ---
 
@@ -33,18 +37,34 @@ A containerized full-stack application that performs real-time sentiment analysi
 
 ---
 
-## Model Performance
+## Architecture
 
-The API serves `distilbert-base-uncased-finetuned-sst-2-english`, pinned by name so an upstream change to the pipeline default cannot silently swap the model out. Measured on the **SST-2 validation split (872 held-out sentences)**:
+One container runs both processes, supervised by `run.py`:
 
-| Metric | Value |
-|---|---|
-| Accuracy | 0.911 |
-| F1 | 0.914 |
-| Mean confidence | 0.983 |
-| Accuracy, positive / negative | 0.930 / 0.890 |
+```
+run.py            starts and supervises both processes below
 
-Single-request latency on CPU, with no GPU and no batching: **p50 37 ms, p95 64 ms, p99 80 ms**. The model is loaded once at import and reused across requests, so these are steady-state numbers rather than cold starts.
+  ├─ main.py      FastAPI on :8000
+  │               loads distilbert-base-uncased-finetuned-sst-2-english once at
+  │               import, serves /analyze /logs /stats, writes every prediction
+  │               to api_logs.db (SQLite, on the container filesystem)
+  │
+  └─ frontend.py  Streamlit on :7860  (the port the Space exposes)
+                  calls the API over HTTP at API_URL, renders the result plus a
+                  pie chart of /stats and a table of /logs
+
+Dockerfile           single image, both processes, non-root user
+.github/workflows/   ci.yml    tests + lint + Docker build and run
+                     sync.yml  mirrors main to the Hugging Face Space
+```
+
+`main.py`, `frontend.py`, `run.py` and `test_main.py` sit at the repository root rather than in `src/` and `tests/`, because the Space builds from this repo as-is.
+
+---
+
+## Model
+
+The API serves `distilbert-base-uncased-finetuned-sst-2-english`, pinned by name so an upstream change to the pipeline default cannot silently swap the model out. Neither this repo nor its sibling fine-tunes it, so for published metrics see the [model card](https://huggingface.co/distilbert/distilbert-base-uncased-finetuned-sst-2-english).
 
 ---
 
@@ -52,10 +72,20 @@ Single-request latency on CPU, with no GPU and no batching: **p50 37 ms, p95 64 
 
 - **Real-time sentiment analysis**: classifies text as POSITIVE or NEGATIVE with a confidence score
 - **REST API** with auto-generated Swagger docs (`/docs`)
-- **MLOps dashboard**: live pie chart and recent prediction history via analytics endpoints
+- **Analytics view**: a pie chart of the POSITIVE/NEGATIVE split and a table of recent predictions, both read from the API's own log
 - **Persistent logging**: every prediction is stored in SQLite
 - **Fully containerized**: single Docker image runs both backend and frontend
-- **Test suite**: endpoint, model, and database tests with Pytest
+- **Test suite**: endpoint, model, and database-schema tests with Pytest
+
+---
+
+## Limitations
+
+- The model was fine-tuned on product and movie reviews (SST-2). It is not suitable for personal, demographic or identity-related statements and may be biased or wrong on them.
+- Binary only. There is no neutral class, so neutral or mixed text still gets a confident-looking label.
+- `/logs` is unauthenticated by design and returns a truncated preview of recent submissions. Nothing entered here is private.
+- The SQLite file lives inside the container, so history resets when the Space restarts.
+- Single-process CPU inference: no batching, no GPU, no queue.
 
 ---
 
@@ -64,8 +94,8 @@ Single-request latency on CPU, with no GPU and no batching: **p50 37 ms, p95 64 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/` | Health check |
-| POST | `/analyze` | Run sentiment analysis on text |
-| GET | `/logs` | Retrieve recent predictions |
+| POST | `/analyze` | Run sentiment analysis on text (1–5000 characters) |
+| GET | `/logs` | Retrieve recent predictions (`limit` 1–200, text truncated) |
 | GET | `/stats` | Get sentiment distribution counts |
 | GET | `/docs` | Interactive Swagger UI |
 
@@ -112,5 +142,5 @@ POST /analyze
 pytest -v
 ```
 
-The same suite runs on every push and pull request via GitHub Actions, followed by a Docker
-image build.
+The same suite runs on every push and pull request via GitHub Actions, alongside a `ruff`
+lint pass, followed by a Docker image build that is started and polled until it answers.

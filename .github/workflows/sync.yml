@@ -26,12 +26,13 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           if [ -z "$HF_TOKEN" ]; then
-            echo "HF_TOKEN secret is not set - skipping Hugging Face sync." >&2
-            exit 0
+            echo "HF_TOKEN secret is not set. The Hugging Face Space cannot be synced without it - set the HF_TOKEN repository secret and re-run this workflow." >&2
+            exit 1
           fi
 
           # Commit identity uses the GitHub no-reply address
           git config --global user.email "yliman@users.noreply.github.com"
           git config --global user.name "yliman"
 
+          # The Space is a one-way mirror of this repository, so a force push is correct here.
           git push --force "https://yliman:$HF_TOKEN@huggingface.co/spaces/yliman/ai-sentiment-api" main

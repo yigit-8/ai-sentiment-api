@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Only one run per branch: a new push cancels the in-flight run for that ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -25,6 +30,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Lint
+        run: |
+          pip install ruff==0.15.11
+          ruff check .
+
       - name: Run tests
         run: pytest -v --tb=short
 
@@ -37,3 +47,24 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t test-sentiment-api .
+
+      - name: Run image and wait for it to answer
+        run: |
+          docker run -d --name sentiment-smoke -p 7860:7860 test-sentiment-api
+
+          # 300s matches run.py's own wait_for_port timeout: the backend downloads
+          # and loads ~268 MB of model weights at import before Streamlit starts,
+          # and the image bakes in no HF cache, so a cold runner needs the room.
+          deadline=$((SECONDS + 300))
+          until curl --silent --fail http://localhost:7860/ >/dev/null; do
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "Container did not answer on port 7860 within 300s." >&2
+              docker logs sentiment-smoke
+              docker rm -f sentiment-smoke
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "Container is serving on port 7860."
+          docker rm -f sentiment-smoke
