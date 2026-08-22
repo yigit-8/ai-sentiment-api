@@ -14,6 +14,12 @@ st.info(
     "It is not suitable for personal, demographic, or identity-related statements and may produce biased or inaccurate results for such inputs."
 )
 
+st.warning(
+    "🔓 **Your text is stored and public.** Every submission is saved to this demo's database "
+    "and is returned by the public `/logs` endpoint and shown in the history table below, to anyone. "
+    "Please do not enter personal, confidential, or sensitive information."
+)
+
 user_input = st.text_area("Enter your text:", height=150, placeholder="e.g., The product quality is amazing!")
 
 API_BASE_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
